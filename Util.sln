@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{0EAD168F-DFE1-4948-BA3C-DDE1CC992C3D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Util.Reflection", "Util.Reflection\Util.Reflection.csproj", "{D3783790-7AF3-45FC-BAE2-D1A02691EDA9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Util", "Util\Util.csproj", "{2E10F8ED-D2DC-4B2B-9CEA-0FE6B126AD07}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Util.ORM", "Util.ORM\Util.ORM.csproj", "{E494C885-9698-4A64-BD93-C07B16CA60A5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ORM", "ORM", "{D3FDE713-C530-4BD3-8446-84AE39CDDEA5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Util.ORM.Mysql", "Util.Orm.Mysql\Util.ORM.Mysql.csproj", "{54A55F0F-4686-4EE7-9D51-410CAE25450B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Util.Mapper", "Util.Mapper\Util.Mapper.csproj", "{F62F745D-C710-4DB1-9999-60C37FB51802}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B9F01DC0-575E-423D-8A95-3EBBF21379BC}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0EAD168F-DFE1-4948-BA3C-DDE1CC992C3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EAD168F-DFE1-4948-BA3C-DDE1CC992C3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EAD168F-DFE1-4948-BA3C-DDE1CC992C3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EAD168F-DFE1-4948-BA3C-DDE1CC992C3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3783790-7AF3-45FC-BAE2-D1A02691EDA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3783790-7AF3-45FC-BAE2-D1A02691EDA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3783790-7AF3-45FC-BAE2-D1A02691EDA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3783790-7AF3-45FC-BAE2-D1A02691EDA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E10F8ED-D2DC-4B2B-9CEA-0FE6B126AD07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E10F8ED-D2DC-4B2B-9CEA-0FE6B126AD07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E10F8ED-D2DC-4B2B-9CEA-0FE6B126AD07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E10F8ED-D2DC-4B2B-9CEA-0FE6B126AD07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E494C885-9698-4A64-BD93-C07B16CA60A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E494C885-9698-4A64-BD93-C07B16CA60A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E494C885-9698-4A64-BD93-C07B16CA60A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E494C885-9698-4A64-BD93-C07B16CA60A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54A55F0F-4686-4EE7-9D51-410CAE25450B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54A55F0F-4686-4EE7-9D51-410CAE25450B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54A55F0F-4686-4EE7-9D51-410CAE25450B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54A55F0F-4686-4EE7-9D51-410CAE25450B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F62F745D-C710-4DB1-9999-60C37FB51802}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F62F745D-C710-4DB1-9999-60C37FB51802}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F62F745D-C710-4DB1-9999-60C37FB51802}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F62F745D-C710-4DB1-9999-60C37FB51802}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E494C885-9698-4A64-BD93-C07B16CA60A5} = {D3FDE713-C530-4BD3-8446-84AE39CDDEA5}
+		{54A55F0F-4686-4EE7-9D51-410CAE25450B} = {D3FDE713-C530-4BD3-8446-84AE39CDDEA5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {14A7CF56-BB42-49AD-82C1-10FC63B21E0F}
+	EndGlobalSection
+EndGlobal
