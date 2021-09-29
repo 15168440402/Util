@@ -374,7 +374,7 @@ namespace Util.Reflection.Expressions
                 {
                     foreach(var (extra,type) in MemberParamter.MemberDescriptor.ExtraParameters)
                     {
-                        paramExps?.Append(ConstantExpression.Constant(extra, type));
+                        paramExps=paramExps?.Append(ConstantExpression.Constant(extra, type));
                     }
                 }
                 return Expression.Call(MemberParamter.ConvertInstance, method, paramExps);

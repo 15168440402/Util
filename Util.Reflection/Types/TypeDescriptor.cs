@@ -99,7 +99,7 @@ namespace Util.Reflection.Types
                     }
                 }
                 if (compareParameTypeEnumerator.MoveNext()) return null;
-                output = new MemberDescriptor(method);
+                if(output is null)output = new MemberDescriptor(method);
                 return output;
             }
         }

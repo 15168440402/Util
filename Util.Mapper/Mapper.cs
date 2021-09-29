@@ -223,7 +223,7 @@ namespace Util.Mapper
 
                 Expr.Foreach(sourList, (source, c, r) =>
                 {
-                    dicList.Method("Add", BuildDictionary(source));
+                    dicList.BlockMethod("Add", BuildDictionary(source));
                 });
                 return dicList.BuildDelegate<Func<IEnumerable<TSource>, List<Dictionary<string, string>>>>();
             }
@@ -232,13 +232,15 @@ namespace Util.Mapper
         {            
             Var mapper = Expr.New<Dictionary<string, string>>();
             var sourceProperties = source.Type.GetProperties();
-            var jsonConvert = Expr.Static(typeof(JsonSerializer));
+            //var jsonConvert = Expr.Static(typeof(JsonSerializer));
+            var jsonConvert = Expr.Static(typeof(Mapper));
             foreach (var sp in sourceProperties)
             {
                 var spt = sp.PropertyType;
-                if (spt.IsValueType) mapper[$"[{sp.Name}]"] = source[sp.Name].Method("ToString");//source[sp.Name].Convert<string>();
+                if (spt.IsValueType) mapper[$"[{sp.Name}]"] = source[sp.Name].Method("ToString");
                 else if (spt == typeof(string)) mapper[$"[{sp.Name}]"] = source[sp.Name];
-                else mapper[$"[{sp.Name}]"] = jsonConvert.Method("Serialize", source[sp.Name]);
+                //else mapper[$"[{sp.Name}]"] = jsonConvert.Method("Serialize", source[sp.Name]);
+                else mapper[$"[{sp.Name}]"] = jsonConvert.Method("ToJson", source[sp.Name]);
             }
             return mapper;
         }
@@ -247,7 +249,7 @@ namespace Util.Mapper
         #region ToJson 序列化/反序列化
         public static string ToJson<TSource>(TSource input)
         {
-            string key = $"[{typeof(TSource).Name}]ToJson";
+            string key = $"[{typeof(TSource).FullName}]ToJson";
             if (_map.TryGetValue(key, out var @delegate))
             {
                 var func = (Func<TSource, string>)@delegate;
