@@ -168,91 +168,7 @@ namespace Util.Reflection.Expressions
         }
     }
     #endregion
-
-    //public class MemberDestructor
-    //{
-    //    public MemberDestructor(string memberName)
-    //    {
-    //        MemberName = memberName==""?"Item": memberName;
-    //    }
-    //    public CommonValueExpression? Instance { get; set; }
-    //    public IStatic? Static { get; set; }
-    //    public string MemberName { get; }
-    //    public IEnumerable<Type>? MethodParamTypes { get; set; }
-    //    public IEnumerable<CommonValueExpression>? PropertyIndexParams { get; set; }
-    //    IEnumerable<Type>? PropertyIndexTypes => PropertyIndexParams?.Select(p => p.Type);
-    //    public Type ClassType { get; private set; } = typeof(void);
-    //    public Type MemberType { get; private set; } = typeof(void);
-    //    /// <summary>
-    //    /// 如果是class是静态的，则返回值为null的CommonValueExpression
-    //    /// </summary>
-    //    /// <returns></returns>
-    //    public CommonValueExpression GetInstance()
-    //    {
-    //        if (Instance is null) return ConstantExpression.Constant(null,ClassType);
-    //        else return Instance;
-    //    }
-    //    public MemberInfo GetMemberInfo()
-    //    {
-    //        if (Instance is not null) ClassType = Instance.Type;
-    //        else if (Static is not null) ClassType = Static.Type;
-    //        else throw new UtilException("实体和静态类都为null，无法执行成员操作", "你无法解决的错误");
-    //        return ClassType.MemberQuery(MemberName, MethodParamTypes?? PropertyIndexTypes) ?? throw new Exception($"类型{ClassType.FullName}不存在属性或字段或方法{MemberName}");
-    //    }
-    //    public Type GetMemberType()
-    //    {
-    //        var memberInfo = GetMemberInfo();
-    //        if (memberInfo is PropertyInfo member) return member.PropertyType;
-    //        if (memberInfo is FieldInfo field) return field.FieldType;
-    //        if (memberInfo is MethodInfo method)
-    //        {
-    //            var memberType = default(Type);
-    //            var genericTypes = MethodParamTypes?.ToList() ?? new();
-    //            if (method.ReturnType == typeof(void))
-    //            {
-    //                var paramCount = genericTypes.Count;
-    //                if (paramCount == 0) memberType = typeof(Action);
-    //                else if (paramCount == 1) memberType = typeof(Action<>);
-    //                else if (paramCount == 2) memberType = typeof(Action<,>);
-    //                else if (paramCount == 3) memberType = typeof(Action<,,>);
-    //                else if (paramCount == 4) memberType = typeof(Action<,,,>);
-    //                else if (paramCount == 5) memberType = typeof(Action<,,,,>);
-    //                else if (paramCount == 6) memberType = typeof(Action<,,,,,>);
-    //                else if (paramCount == 7) memberType = typeof(Action<,,,,,,>);
-    //                else if (paramCount == 8) memberType = typeof(Action<,,,,,,,>);
-    //                else if (paramCount == 9) memberType = typeof(Action<,,,,,,,,>);
-    //            }
-    //            else
-    //            {
-    //                genericTypes.Add(method.ReturnType);
-    //                var paramCount = genericTypes.Count;
-    //                if (paramCount == 1) memberType = typeof(Func<>);
-    //                else if (paramCount == 2) memberType = typeof(Func<,>);
-    //                else if (paramCount == 3) memberType = typeof(Func<,,>);
-    //                else if (paramCount == 4) memberType = typeof(Func<,,,>);
-    //                else if (paramCount == 5) memberType = typeof(Func<,,,,>);
-    //                else if (paramCount == 6) memberType = typeof(Func<,,,,,>);
-    //                else if (paramCount == 7) memberType = typeof(Func<,,,,,,>);
-    //                else if (paramCount == 8) memberType = typeof(Func<,,,,,,,>);
-    //                else if (paramCount == 9) memberType = typeof(Func<,,,,,,,,>);
-    //                else if (paramCount == 9) memberType = typeof(Func<,,,,,,,,,>);
-    //            }
-    //            if (memberType is null) throw new Exception("最大支持解析9个参数的方法");
-    //            MemberType = memberType.MakeGenericType(genericTypes.ToArray());
-    //            return MemberType;
-    //        }
-    //        throw new Exception($"无法解析成员{MemberName}");
-    //    }
-    //    public Type GetReturnType()
-    //    {
-    //        var memberInfo = GetMemberInfo();
-    //        if (memberInfo is PropertyInfo member) return member.PropertyType;
-    //        if (memberInfo is FieldInfo field) return field.FieldType;
-    //        if (memberInfo is MethodInfo method) return method.ReturnType;
-    //        throw new Exception($"无法解析成员{MemberName}");
-    //    }
-    //}
-
+  
     public class MemberParamter
     {
         public MemberParamter(CommonValueExpression instance, string memberName, IEnumerable<Type>? MethodParamTypes = null, IEnumerable<Type>? genericParamTypes = null)
@@ -288,7 +204,7 @@ namespace Util.Reflection.Expressions
 
             if (memberInfo is PropertyInfo propertyInfo)
             {
-                if (MemberParamter.PropertyIndexParams is null) return Expression.Property(MemberParamter.Instance, propertyInfo);
+                if (MemberParamter.PropertyIndexParams is null) return Expression.Property(MemberParamter.ConvertInstance, propertyInfo);//MemberParamter.Instance
                 else return Expression.Property(MemberParamter.Instance, propertyInfo, MemberParamter.PropertyIndexParams.Select(p => (Expression)p));
             }
             if (memberInfo is FieldInfo fildInfo) return Expression.Field(MemberParamter.Instance, fildInfo);
@@ -449,6 +365,8 @@ namespace Util.Reflection.Expressions
                 ExprType.GreaterThan => Expression.GreaterThan(LeftExp, RightExp),
                 ExprType.LessThanOrEqual => Expression.LessThanOrEqual(LeftExp, RightExp),
                 ExprType.GreaterThanOrEqual => Expression.GreaterThanOrEqual(LeftExp, RightExp),
+                ExprType.AndAlso => Expression.AndAlso(LeftExp, RightExp),
+                ExprType.OrElse => Expression.OrElse(LeftExp, RightExp),
                 _ => throw new UtilException($"不支持{NodeType}节点转换", "你无法解决的错误")
             };
         }
@@ -489,6 +407,7 @@ namespace Util.Reflection.Expressions
                 ExprType.Add when leftType==typeof(string) || rightType==typeof(string) => typeof(string),
                 ExprType.PreDecrementAssign or ExprType.PostDecrementAssign or ExprType.PreIncrementAssign or ExprType.PostIncrementAssign when leftType == typeof(int) => typeof(int),
                 ExprType.Equal or ExprType.NotEqual or ExprType.LessThan or ExprType.GreaterThan or ExprType.LessThanOrEqual or ExprType.GreaterThanOrEqual => typeof(bool),
+                ExprType.AndAlso or ExprType.OrElse  => typeof(bool),
                 _ => throw new UtilException($"({leftType.FullName},{rightType?.FullName ?? ""})不支持运算符{nodeType}"),
             };
         }
@@ -578,6 +497,14 @@ namespace Util.Reflection.Expressions
         public static OperationExpression GreaterThanOrEqual(CommonValueExpression left, CommonValueExpression right)
         {
             return Instantiate(ExprType.GreaterThanOrEqual, left, right);
+        }
+        public static OperationExpression AndAlso(CommonValueExpression left, CommonValueExpression right)
+        {
+            return Instantiate(ExprType.AndAlso, left, right);
+        }
+        public static OperationExpression OrElse(CommonValueExpression left, CommonValueExpression right)
+        {
+            return Instantiate(ExprType.OrElse, left, right);
         }
     }
 

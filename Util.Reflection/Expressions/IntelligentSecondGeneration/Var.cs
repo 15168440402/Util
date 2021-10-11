@@ -23,6 +23,7 @@ namespace Util.Reflection.Expressions
         public static implicit operator Var(InstanceExpression value) => new Var(value);
         public static implicit operator Var(MethodExpression value) => new Var(value);
         public static implicit operator Var(ConvertExpression value) => new Var(value);
+        public static implicit operator Var(ConstantExpression value) => new Var(value);
 
         public static implicit operator Var(string value) =>new Var(Expr.Constant(value));
 
@@ -172,7 +173,11 @@ namespace Util.Reflection.Expressions
         {
             Step.AddStep(this.Method(methodName, param));
         }
-      
+        
+        public void Assgin(CommonValueExpression value)
+        {
+            Step.AddStep(Expr.Assign(this, value));
+        }
         public override TDelegate BuildDelegate<TDelegate>()
         {
             ExprStepsContainer.RemoveExprStep(Step);

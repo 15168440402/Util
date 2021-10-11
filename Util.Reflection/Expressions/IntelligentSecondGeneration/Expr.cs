@@ -8,6 +8,13 @@ namespace Util.Reflection.Expressions
     public partial class Expr
     {
         public static Var Var(CommonValueExpression value) => new Var(value);
+        public static ParamExpression BlockParam(Type type)
+        {
+            var step = ExprStepsContainer.QueryExprStep();
+            var paramter = Expr.Param(type);
+            step.AddStep(paramter);
+            return paramter;
+        }
         internal static CommonExpression BuildBlockExpr(IEnumerable<CommonExpression> exprs, CommonValueExpression? returnExp = null)
         {
             if (exprs.Count() == 1) return exprs.First();

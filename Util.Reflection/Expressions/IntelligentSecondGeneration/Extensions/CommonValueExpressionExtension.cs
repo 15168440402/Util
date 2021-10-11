@@ -6,7 +6,6 @@ namespace Util.Reflection.Expressions.Abstractions
     public abstract partial class CommonValueExpression
     {
         //public static implicit operator CommonValueExpression(Var value) => value.Variable;
-
         public static implicit operator CommonValueExpression(string value) => Expr.Constant(value);
 
         public static implicit operator CommonValueExpression(long value) => Expr.Constant(value);

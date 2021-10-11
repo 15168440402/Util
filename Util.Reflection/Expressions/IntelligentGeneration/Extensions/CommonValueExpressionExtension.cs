@@ -100,6 +100,21 @@ namespace Util.Reflection.Expressions.Abstractions
         {
             return OperationExpression.GreaterThanOrEqual(left, right);
         }
-
+        public static CommonValueExpression operator &(CommonValueExpression left, CommonValueExpression right)
+        {
+            return OperationExpression.AndAlso(left, right);
+        }
+        public static CommonValueExpression operator |(CommonValueExpression left, CommonValueExpression right)
+        {
+            return OperationExpression.OrElse(left, right);
+        }
+        public static bool operator true(CommonValueExpression left)
+        {
+            return false;
+        }
+        public static bool operator false(CommonValueExpression left)
+        {
+            return false;
+        }
     }
 }

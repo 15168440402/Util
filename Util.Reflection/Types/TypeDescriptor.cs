@@ -10,29 +10,34 @@ namespace Util.Reflection.Types
 {
     public partial class TypeDescriptor
     {
-        public TypeDescriptor(Type type)
+        public TypeDescriptor(Type type, string name = "") => (Type, Name) = (type, name);
+        public string Name { get; init; }
+        public Type Type { get; init; }
+
+        TypeEnum? _typeEnum;
+        public TypeEnum? TypeEnum => _typeEnum ?? (_typeEnum = TypeDescriptorHelper.GetTypeEnum(Type));
+        TypeDetailEnum? _typeDetailEnum;
+        public TypeDetailEnum? TypeDetailEnum => _typeDetailEnum ?? (_typeDetailEnum = TypeDescriptorHelper.GetTypeDetailEnum(Type));
+
+        List<TypeDescriptor>? _properties;
+        public List<TypeDescriptor> Properties => _properties ?? (TypeDescriptorHelper.GetProperties(Type));
+        public TypeDescriptor? QueryProperty(string name)
         {
-            if (type.IsValueType) TypeEnum = TypeEnum.ValueType;
-            else if(type==typeof(string)) TypeEnum = TypeEnum.String;
-            else if(type.GenericTypeArguments.Any(gt=>gt== typeof(System.Collections.IEnumerable))) TypeEnum = TypeEnum.Array;
-            else TypeEnum = TypeEnum.Object;
+            return Properties.FirstOrDefault(p=>p.Name== name);
         }
 
-        public TypeEnum TypeEnum { get; init; }
+        public List<TypeDescriptor> GenericTypeArguments=> Type.GenericTypeArguments.Select(gt => new TypeDescriptor(gt)).ToList();
     }
-    public enum TypeEnum
-    {
-        ValueType,
-        String,
-        Object,
-        Array
-    }
-
+    
     public partial class TypeDescriptor
     {
         public static MemberInfo[] GetMembers(Type type)
         {
             return type.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        }
+        public static PropertyInfo[] GetPropertys(Type type)
+        {
+            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
         }
         /// <summary>
         /// 获取指定类型的第一个符合指定条件的成员
@@ -45,10 +50,9 @@ namespace Util.Reflection.Types
         /// <returns></returns>
         public static MemberDescriptor? QueryMember(Type type, string memberName, IEnumerable<Type>? methodParamTypes = null, IEnumerable<Type>? genericParamTypes = null)
         {
-            var members = GetMembers(type);
-            var matchingMembers = members.Where(m => m.Name == memberName);
-            if (matchingMembers.Count() == 0) return null;
-            foreach (var member in matchingMembers)
+            var members = GetMembers(type).Where(m => m.Name == memberName);
+            if (members.Count() == 0) return null;
+            foreach (var member in members)
             {
                 if (member is PropertyInfo property) return new MemberDescriptor(property);
                 else if (member is FieldInfo field) return new MemberDescriptor(field);
@@ -141,7 +145,7 @@ namespace Util.Reflection.Types
             }
             return EqualMethod(method, compareParameTypes);
         }
-        
+       
     }
     public class MemberDescriptor
     {
@@ -193,6 +197,79 @@ namespace Util.Reflection.Types
                 return memberType;
             }
             throw new UtilException($"无法解析成员{Member.Name},此成员不属于字段、属性、方法");
+        }
+    }
+
+    public enum TypeEnum
+    {
+        ValueType,
+        String,
+        Object,
+        Array
+    }
+    public enum TypeDetailEnum
+    {      
+        Int,
+        Uint,
+        Short,
+        Ushort,
+        Long,
+        Ulong,
+        Byte,
+        Sbyte,
+        Nint,
+        Nuint,
+        Float,
+        Double,
+        Decimal,
+        Bool,
+        Char,
+        String,
+        DateTime,
+        List,
+        Array
+    }
+   
+    static class TypeDescriptorHelper
+    {
+        internal static TypeEnum? GetTypeEnum(Type type)
+        {
+            if (type.IsValueType) return TypeEnum.ValueType;
+            else if (type == typeof(string)) return TypeEnum.String;
+            else if (type.GetInterfaces().Any(gt => gt == typeof(System.Collections.IEnumerable))) return TypeEnum.Array;
+            else return TypeEnum.Object;
+        }
+        internal static TypeDetailEnum? GetTypeDetailEnum(Type type)
+        {
+            if (type.IsValueType)
+            {
+                if(type== typeof(int))return TypeDetailEnum.Int;
+                else if (type == typeof(uint)) return TypeDetailEnum.Uint;
+                else if (type == typeof(short)) return TypeDetailEnum.Short;
+                else if (type == typeof(ushort)) return TypeDetailEnum.Ushort;
+                else if (type == typeof(byte)) return TypeDetailEnum.Byte;
+                else if (type == typeof(sbyte)) return TypeDetailEnum.Sbyte;
+                else if (type == typeof(long)) return TypeDetailEnum.Long;
+                else if (type == typeof(ulong)) return TypeDetailEnum.Ulong;
+                else if (type == typeof(nint)) return TypeDetailEnum.Nint;
+                else if (type == typeof(nuint)) return TypeDetailEnum.Nuint;
+                else if (type == typeof(float)) return TypeDetailEnum.Float;
+                else if (type == typeof(double)) return TypeDetailEnum.Double;
+                else if (type == typeof(decimal)) return TypeDetailEnum.Decimal;
+                else if (type == typeof(bool)) return TypeDetailEnum.Bool;
+                else if (type == typeof(char)) return TypeDetailEnum.Char;
+                else if (type == typeof(DateTime)) return TypeDetailEnum.DateTime;
+                else return null;
+            }
+            else if (type == typeof(string)) return TypeDetailEnum.String;
+            else if (type.BaseType==typeof(Array)) return TypeDetailEnum.Array;
+            else if (type.GetInterfaces().Any(gt => gt == typeof(System.Collections.ICollection)) && type.GenericTypeArguments.Length == 1) return TypeDetailEnum.List;
+            else return null;
+           
+        }
+        internal static List<TypeDescriptor> GetProperties(Type type)
+        {
+            return TypeDescriptor.GetPropertys(type).Select(p => new TypeDescriptor(p.PropertyType, p.Name)).ToList();
         }
     }
 }

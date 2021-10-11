@@ -6,6 +6,7 @@ using Util.Reflection.Expressions;
 using System.Text.Json;
 using System.Text;
 using Util.Reflection.Expressions.Abstractions;
+using Util.Reflection.Types;
 
 namespace Util.Mapper
 {
@@ -263,7 +264,7 @@ namespace Util.Mapper
             }
             Func<TSource, string> BuildToJsonDelegate()
             {
-                Var instance = Expr.Param<TSource>();
+                var instance = Expr.BlockParam(typeof(TSource));
                 Var stringBuilder = Expr.New<StringBuilder>();
                 BuildJson(instance, stringBuilder);
                 stringBuilder.BlockMethod("ToString");
@@ -273,9 +274,21 @@ namespace Util.Mapper
         static void BuildJson(CommonValueExpression instance, Var stringBuilder)
         {
             string append = nameof(StringBuilder.Append);
-            if (instance.Type.IsValueType)
+            var descriptor = new TypeDescriptor(instance.Type);
+            if (descriptor.TypeEnum == TypeEnum.ValueType)
             {
-                stringBuilder.BlockMethod(append, instance.Method("ToString"));
+                if(descriptor.TypeDetailEnum==TypeDetailEnum.Bool)
+                {
+                    stringBuilder.BlockMethod(append, instance.Method("ToString").Method("ToLower"));
+                }
+                else if(descriptor.TypeDetailEnum == TypeDetailEnum.DateTime)
+                {
+                    stringBuilder.BlockMethod(append, "\"" + instance.Method("ToString") + "\"");
+                }
+                else
+                {
+                    stringBuilder.BlockMethod(append, instance);
+                }              
             }
             else 
             {
@@ -334,9 +347,9 @@ namespace Util.Mapper
             }
         }
 
-        public static TSource ToClass<TSource>(string input)
+        public static TSource ToClass<TSource>(string input) where TSource : class,new()
         {
-            string key = $"[{typeof(TSource).Name}]ToJson";
+            string key = $"[{typeof(TSource).Name}]ToClass";
             if (_map.TryGetValue(key, out var @delegate))
             {
                 var func = (Func<string, TSource>)@delegate;
@@ -350,12 +363,154 @@ namespace Util.Mapper
             }
             Func<string, TSource> BuildToClassDelegate()
             {
-                return default!;
+                var descriptor = new TypeDescriptor(typeof(TSource));
+                var json = Expr.BlockParam(typeof(string));
+                var bytes = Expr.Static<Encoding>().MemberQuery("UTF8").Method("GetBytes", json);
+                var options = Expr.New(typeof(JsonReaderOptions));
+                options.InitMember(Expr.Constant(true, "AllowTrailingCommas"), Expr.Constant(JsonCommentHandling.Skip, "CommentHandling"));
+                Var jsonReader = Expr.New(typeof(Utf8JsonReader), bytes.Convert(typeof(ReadOnlySpan<byte>)), options);
+                Var instance = BuildClass(jsonReader, descriptor);
+                return instance.BuildDelegate<Func<string, TSource>>();
             }
         }
-        static void BuildClass(string json)
+        static Var BuildClass(Var jsonReader, TypeDescriptor descriptor)
         {
+            Var instance = Expr.Constant(null, descriptor.Type);
+            Expr.While(jsonReader.Method("Read"), (c, r) =>
+            {
+                if(descriptor.TypeEnum!= TypeEnum.Array)
+                {
+                    Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.PropertyName), () =>
+                    {
+                        Var propertyName = jsonReader.Method("GetString");
+                        foreach (var ps in descriptor.Properties)
+                        {
+                            Expr.IfThen(propertyName == Expr.Constant(ps.Name), () =>
+                            {
+                                if (ps.TypeEnum == TypeEnum.ValueType || ps.TypeEnum == TypeEnum.String)
+                                {
+                                    jsonReader.BlockMethod("Read");
+                                    if (ps.TypeDetailEnum == TypeDetailEnum.String)
+                                    {
+                                        Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.String), () =>
+                                        {
+                                            instance[ps.Name] = jsonReader.Method("GetString");
+                                        });
+                                    }
+                                    else if (ps.TypeDetailEnum == TypeDetailEnum.Bool)
+                                    {
+                                        Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.True) || jsonReader["TokenType"] == Expr.Constant(JsonTokenType.False), () =>
+                                        {
+                                            instance[ps.Name] = jsonReader.Method("GetBoolean");
+                                        });
+                                    }
+                                    else if (ps.TypeDetailEnum == TypeDetailEnum.Char)
+                                    {
+                                        Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.String), () =>
+                                        {
+                                            instance[ps.Name] = jsonReader.Method("GetString")[0];
+                                        });
+                                    }
+                                    else if (ps.TypeDetailEnum == TypeDetailEnum.DateTime)
+                                    {
+                                        Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.String), () =>
+                                        {
+                                            instance[ps.Name] = Expr.Static(typeof(Convert)).Method("ToDateTime", jsonReader.Method("GetString"));
+                                        });
+                                    }
+                                    else
+                                    {
+                                        Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.Number), () =>
+                                        {
+                                            if (ps.TypeDetailEnum == TypeDetailEnum.Int) instance[ps.Name] = jsonReader.Method("GetInt32");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Uint) instance[ps.Name] = jsonReader.Method("GetUInt32");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Short) instance[ps.Name] = jsonReader.Method("GetInt16");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Ushort) instance[ps.Name] = jsonReader.Method("GetUInt16");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Byte) instance[ps.Name] = jsonReader.Method("GetByte");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Sbyte) instance[ps.Name] = jsonReader.Method("GetSByte");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Long) instance[ps.Name] = jsonReader.Method("GetInt64");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Ulong) instance[ps.Name] = jsonReader.Method("GetUInt64");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Decimal) instance[ps.Name] = jsonReader.Method("GetDecimal");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Double) instance[ps.Name] = jsonReader.Method("GetDouble");
+                                            else if (ps.TypeDetailEnum == TypeDetailEnum.Float) instance[ps.Name] = jsonReader.Method("GetSingle");
+                                        });
+                                    }
+                                }
+                                else
+                                {
+                                    instance[ps.Name] = BuildClass(jsonReader, ps);
+                                }
+                                c();
+                            });
+                        }
+                        jsonReader.BlockMethod("Skip");
+                        c();
+                    });
 
+                    Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.StartObject), () =>
+                    {
+                        if (descriptor.TypeEnum == TypeEnum.Object)
+                        {
+                            instance.Assgin(Expr.New(descriptor.Type));
+                        }
+                        else r();
+                    });
+
+                    Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.EndObject), () =>
+                    {
+                        r();
+                    });
+                }
+                else
+                {
+
+                    Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.StartArray), () =>
+                    {
+                        if (descriptor.TypeEnum == TypeEnum.Array)
+                        {
+                            instance.Assgin(Expr.New(descriptor.Type));
+                            Expr.While(jsonReader["TokenType"] != Expr.Constant(JsonTokenType.EndArray), (_, _) =>
+                            {
+                                instance.BlockMethod("Add", BuildClass(jsonReader, descriptor.GenericTypeArguments[0]));
+                            });
+                            instance.BlockMethod("RemoveAt", instance["Count"]-1);
+                        }
+                        else r();
+                    });
+
+                    Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.EndArray), () =>
+                    {
+                        r();
+                    });
+                }
+            });
+            return instance;
+        }
+
+        static Var BuildClassNew(Var jsonReader, TypeDescriptor descriptor)
+        {
+            Var instance = Expr.Constant(null, descriptor.Type);
+            Expr.While(jsonReader.Method("Read"), (c, r) =>
+            {
+                if (descriptor.TypeEnum == TypeEnum.Object)
+                {
+
+                }
+                else if(descriptor.TypeEnum == TypeEnum.Array)
+                {
+                    Expr.IfThen(jsonReader["TokenType"] == Expr.Constant(JsonTokenType.StartArray), () =>
+                    {
+                        instance.Assgin(Expr.New(descriptor.Type));
+                        Expr.While(jsonReader["TokenType"] != Expr.Constant(JsonTokenType.EndArray), (_, _) =>
+                        {
+
+                            instance.BlockMethod("Add", BuildClass(jsonReader, descriptor.GenericTypeArguments[0]));
+                        });
+                    });
+                }
+                r();
+            });
+            return instance;
         }
         #endregion
     }
