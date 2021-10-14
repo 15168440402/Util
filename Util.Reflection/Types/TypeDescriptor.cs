@@ -227,7 +227,8 @@ namespace Util.Reflection.Types
         String,
         DateTime,
         List,
-        Array
+        Array,
+        Dictionary
     }
    
     static class TypeDescriptorHelper
@@ -243,7 +244,7 @@ namespace Util.Reflection.Types
         {
             if (type.IsValueType)
             {
-                if(type== typeof(int))return TypeDetailEnum.Int;
+                if (type == typeof(int)) return TypeDetailEnum.Int;
                 else if (type == typeof(uint)) return TypeDetailEnum.Uint;
                 else if (type == typeof(short)) return TypeDetailEnum.Short;
                 else if (type == typeof(ushort)) return TypeDetailEnum.Ushort;
@@ -262,7 +263,8 @@ namespace Util.Reflection.Types
                 else return null;
             }
             else if (type == typeof(string)) return TypeDetailEnum.String;
-            else if (type.BaseType==typeof(Array)) return TypeDetailEnum.Array;
+            else if (type.BaseType == typeof(Array)) return TypeDetailEnum.Array;
+            else if (type.GetInterfaces().Any(t => t == typeof(System.Collections.IDictionary))) return TypeDetailEnum.Dictionary;
             else if (type.GetInterfaces().Any(gt => gt == typeof(System.Collections.ICollection)) && type.GenericTypeArguments.Length == 1) return TypeDetailEnum.List;
             else return null;
            

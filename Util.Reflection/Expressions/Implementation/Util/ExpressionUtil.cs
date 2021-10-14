@@ -9,7 +9,7 @@ namespace Util.Reflection.Expressions.Util
     {
         public static TDelegate BuildDelegate<TDelegate>(Expression exp, List<ParameterExpression>? parameters = null) where TDelegate : Delegate
         {
-            var paramters = GetParamterExpr(exp);
+            var paramters = GetParamterExpr(exp).Distinct();            
             return Expression.Lambda<TDelegate>(exp, paramters).Compile();
         }
         static List<ParameterExpression> GetParamterExpr(Expression? exp)

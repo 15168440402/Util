@@ -8,12 +8,16 @@ namespace Util.Reflection.Expressions
     public partial class Expr
     {
         public static Var Var(CommonValueExpression value) => new Var(value);
-        public static ParamExpression BlockParam(Type type)
+        public static ParamExpression BlockParam(Type type)//后期会删除此功能，只需要用Expr.Param即可
         {
             var step = ExprStepsContainer.QueryExprStep();
             var paramter = Expr.Param(type);
             step.AddStep(paramter);
             return paramter;
+        }
+        public static ParamExpression BlockParam<T>()//后期会删除此功能，只需要用Expr.Param即可
+        {
+            return BlockParam(typeof(T));
         }
         internal static CommonExpression BuildBlockExpr(IEnumerable<CommonExpression> exprs, CommonValueExpression? returnExp = null)
         {
@@ -87,7 +91,8 @@ namespace Util.Reflection.Expressions
                 Var enumerator = enumeratorGen.Convert<System.Collections.IEnumerator>();
                 While(enumerator.Method("MoveNext"), (c, r) =>
                 {
-                    body(enumerator["Current"].Convert(type), c, r);
+                    Var convert = enumerator["Current"].Convert(type);
+                    body(convert, c, r);
                 });
             }            
         }

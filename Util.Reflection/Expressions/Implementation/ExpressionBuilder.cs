@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Util.Extensions.Reflection.Types;
 using Util.Reflection.Expressions.Abstractions;
 using Util.Reflection.Types;
 
@@ -66,12 +65,12 @@ namespace Util.Reflection.Expressions
     /// </summary>
     public partial class VariableExpression : CommonVariableExpression
     {
-        public VariableExpression(Type type,string name=""):base(type)
+        public VariableExpression(Type type, string name = "") : base(type)
         {
             Name = name;
         }
 
-        public override ExprType NodeType { get; protected set; }= ExprType.Variable;
+        public override ExprType NodeType { get; protected set; } = ExprType.Variable;
 
         private protected override ParameterExpression ConvertToExpression()
         {
@@ -168,18 +167,18 @@ namespace Util.Reflection.Expressions
         }
     }
     #endregion
-  
+
     public class MemberParamter
     {
         public MemberParamter(CommonValueExpression instance, string memberName, IEnumerable<Type>? MethodParamTypes = null, IEnumerable<Type>? genericParamTypes = null)
         {
             MemberName = memberName == "" ? "Item" : memberName;
             ClassType = instance.Type;
-            MemberDescriptor = TypeDescriptor.QueryMember(ClassType, MemberName, MethodParamTypes, genericParamTypes)?? throw new UtilException($"类型{ClassType.FullName}不存在属性或字段或方法{MemberName}");
+            MemberDescriptor = TypeDescriptor.QueryMember(ClassType, MemberName, MethodParamTypes, genericParamTypes) ?? throw new UtilException($"类型{ClassType.FullName}不存在属性或字段或方法{MemberName}");
             Instance = instance;
             ConvertInstance = instance;
         }
-        public MemberParamter(IStatic @static, string memberName, IEnumerable<Type>? methodParamTypes = null, IEnumerable<Type>? genericParamTypes = null):this(ConstantExpression.Constant(null, @static.Type), memberName, methodParamTypes, genericParamTypes)
+        public MemberParamter(IStatic @static, string memberName, IEnumerable<Type>? methodParamTypes = null, IEnumerable<Type>? genericParamTypes = null) : this(ConstantExpression.Constant(null, @static.Type), memberName, methodParamTypes, genericParamTypes)
         {
             ConvertInstance = null;
         }
@@ -200,7 +199,7 @@ namespace Util.Reflection.Expressions
         public override ExprType NodeType { get; protected set; } = ExprType.MemberQuery;
         private protected override Expression ConvertToExpression()
         {
-            var memberInfo = MemberParamter.MemberDescriptor.Member;                  
+            var memberInfo = MemberParamter.MemberDescriptor.Member;
 
             if (memberInfo is PropertyInfo propertyInfo)
             {
@@ -220,24 +219,24 @@ namespace Util.Reflection.Expressions
     {
         public static MemberQueryExpression MemberQuery(CommonValueExpression instance, IEnumerable<CommonValueExpression> propertyIndexParams)
         {
-            return new MemberQueryExpression(new MemberParamter(instance,"")
+            return new MemberQueryExpression(new MemberParamter(instance, "")
             {
-                PropertyIndexParams=propertyIndexParams,
-            });            
+                PropertyIndexParams = propertyIndexParams,
+            });
         }
         public static MemberQueryExpression MemberQuery(CommonValueExpression instance, string memberName, IEnumerable<Type>? methodParamTypes = null)
         {
-            return new MemberQueryExpression(new MemberParamter(instance,memberName, methodParamTypes)
+            return new MemberQueryExpression(new MemberParamter(instance, memberName, methodParamTypes)
             {
 
             });
         }
         public static MemberQueryExpression MemberQuery(Type classType, string memberName, IEnumerable<Type>? methodParamTypes = null)
         {
-            return new MemberQueryExpression(new MemberParamter(new Static(classType),memberName, methodParamTypes)
+            return new MemberQueryExpression(new MemberParamter(new Static(classType), memberName, methodParamTypes)
             {
 
-            });           
+            });
         }
     }
     #endregion
@@ -252,23 +251,23 @@ namespace Util.Reflection.Expressions
         private protected override Expression ConvertToExpression()
         {
             var expr = new MemberQueryExpression(MemberParamter);
-            return Expression.Assign(expr, Member);           
+            return Expression.Assign(expr, Member);
         }
     }
     public partial class MemberBindExpression
     {
         public static MemberBindExpression MemberBind(CommonValueExpression instance, CommonValueExpression member, IEnumerable<CommonValueExpression>? propertyIndexParams = null)
         {
-            return new MemberBindExpression(new MemberParamter(instance,member.Name) 
-            { 
-                PropertyIndexParams=propertyIndexParams,
+            return new MemberBindExpression(new MemberParamter(instance, member.Name)
+            {
+                PropertyIndexParams = propertyIndexParams,
             }, member);
         }
         public static MemberBindExpression MemberBind(Type classType, CommonValueExpression member)
         {
-            return new MemberBindExpression(new MemberParamter(new Static(classType),member.Name)
+            return new MemberBindExpression(new MemberParamter(new Static(classType), member.Name)
             {
-            }, member);            
+            }, member);
         }
     }
     #endregion
@@ -276,21 +275,21 @@ namespace Util.Reflection.Expressions
     #region 类方法调用表达式
     public partial class MethodExpression : CommonValueExpression
     {
-        public MethodExpression(MemberParamter paramter, IEnumerable<CommonValueExpression>? @params) : base(paramter.MemberDescriptor.MemberType) => (MemberParamter, Params) = (paramter, @params);       
+        public MethodExpression(MemberParamter paramter, IEnumerable<CommonValueExpression>? @params) : base(paramter.MemberDescriptor.MemberType) => (MemberParamter, Params) = (paramter, @params);
         public MemberParamter MemberParamter { get; set; }
         public IEnumerable<CommonValueExpression>? Params { get; set; }
         public override ExprType NodeType { get; protected set; } = ExprType.Method;
         private protected override Expression ConvertToExpression()
         {
             var member = MemberParamter.MemberDescriptor.Member;
-            if(member is MethodInfo method)
+            if (member is MethodInfo method)
             {
                 var paramExps = Params?.Select(p => (Expression)p);
-                if(MemberParamter.MemberDescriptor.ExtraParameters is not null)
+                if (MemberParamter.MemberDescriptor.ExtraParameters is not null)
                 {
-                    foreach(var (extra,type) in MemberParamter.MemberDescriptor.ExtraParameters)
+                    foreach (var (extra, type) in MemberParamter.MemberDescriptor.ExtraParameters)
                     {
-                        paramExps=paramExps?.Append(ConstantExpression.Constant(extra, type));
+                        paramExps = paramExps?.Append(ConstantExpression.Constant(extra, type));
                     }
                 }
                 return Expression.Call(MemberParamter.ConvertInstance, method, paramExps);
@@ -303,7 +302,7 @@ namespace Util.Reflection.Expressions
     {
         public static MethodExpression Method(CommonValueExpression instance, string methodName, IEnumerable<CommonValueExpression>? param)
         {
-            return new MethodExpression(new MemberParamter(instance,methodName, param?.Select(p => p.Type)) 
+            return new MethodExpression(new MemberParamter(instance, methodName, param?.Select(p => p.Type))
             {
             }, param);
         }
@@ -313,7 +312,7 @@ namespace Util.Reflection.Expressions
         }
         public static MethodExpression Method(Type classType, string methodName, IEnumerable<CommonValueExpression>? param)
         {
-            return new MethodExpression(new MemberParamter(new Static(classType),methodName, param?.Select(p => p.Type))
+            return new MethodExpression(new MemberParamter(new Static(classType), methodName, param?.Select(p => p.Type))
             {
             }, param);
         }
@@ -344,7 +343,7 @@ namespace Util.Reflection.Expressions
         public CommonValueExpression LeftExp { get; set; }
         public CommonValueExpression? _rightExp;
         [NotNull]
-        public CommonValueExpression? RightExp { get => _rightExp ?? throw new UtilException("二元运算意外出现少了一元参与（二元运算需要两个数据参与）", "你无法解决的错误"); set =>_rightExp = value;}
+        public CommonValueExpression? RightExp { get => _rightExp ?? throw new UtilException("二元运算意外出现少了一元参与（二元运算需要两个数据参与）", "你无法解决的错误"); set => _rightExp = value; }
         public override ExprType NodeType { get; protected set; } = ExprType.Operation;
         private protected override Expression ConvertToExpression()
         {
@@ -372,7 +371,7 @@ namespace Util.Reflection.Expressions
         }
         Expression Add()
         {
-            if(LeftExp.Type==typeof(int))
+            if (LeftExp.Type == typeof(int))
             {
                 if (RightExp.Type == typeof(int))
                 {
@@ -384,14 +383,14 @@ namespace Util.Reflection.Expressions
                     return Expression.Add(LeftExp, MethodExpression.Method(RightExp, "ToString"), concatFunc);
                 }
             }
-            else if(LeftExp.Type==typeof(string))
+            else if (LeftExp.Type == typeof(string))
             {
                 var concatFunc = typeof(string).GetMethod("Concat", new[] { typeof(string), typeof(string) });
-                if (RightExp.Type== typeof(string))
-                {                    
+                if (RightExp.Type == typeof(string))
+                {
                     return Expression.Add(LeftExp, RightExp, concatFunc);
                 }
-                else if(RightExp.Type==(typeof(int)))
+                else if (RightExp.Type == (typeof(int)))
                 {
                     return Expression.Add(LeftExp, MethodExpression.Method(RightExp, "ToString"), concatFunc);
                 }
@@ -404,10 +403,10 @@ namespace Util.Reflection.Expressions
             {
                 ExprType.Assign => typeof(void),
                 ExprType.Add or ExprType.Subtract or ExprType.Multiply or ExprType.Divide when leftType == typeof(int) && rightType == typeof(int) => typeof(int),
-                ExprType.Add when leftType==typeof(string) || rightType==typeof(string) => typeof(string),
+                ExprType.Add when leftType == typeof(string) || rightType == typeof(string) => typeof(string),
                 ExprType.PreDecrementAssign or ExprType.PostDecrementAssign or ExprType.PreIncrementAssign or ExprType.PostIncrementAssign when leftType == typeof(int) => typeof(int),
                 ExprType.Equal or ExprType.NotEqual or ExprType.LessThan or ExprType.GreaterThan or ExprType.LessThanOrEqual or ExprType.GreaterThanOrEqual => typeof(bool),
-                ExprType.AndAlso or ExprType.OrElse  => typeof(bool),
+                ExprType.AndAlso or ExprType.OrElse => typeof(bool),
                 _ => throw new UtilException($"({leftType.FullName},{rightType?.FullName ?? ""})不支持运算符{nodeType}"),
             };
         }
@@ -537,7 +536,7 @@ namespace Util.Reflection.Expressions
         public LoopExpression(CommonExpression body, LabelTarget breakTarget, LabelTarget continueTarget) => (Body, BreakTarget, ContinueTarget) = (body, breakTarget, continueTarget);
         public CommonExpression Body { get; set; }
         public LabelTarget BreakTarget { get; set; }
-        public LabelTarget ContinueTarget { get; set; }       
+        public LabelTarget ContinueTarget { get; set; }
         public override ExprType NodeType { get; protected set; } = ExprType.Loop;
         private protected override Expression ConvertToExpression()
         {

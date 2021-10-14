@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Folder Include="Emit\" />
+    <Folder Include="Types\Extensions\" />
   </ItemGroup>
 
   <ItemGroup>

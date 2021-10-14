@@ -34,7 +34,7 @@ namespace Util.Reflection.Expressions
         }
         public static BodyExpression Block(IEnumerable<CommonVariableExpression>? variables, IEnumerable<CommonExpression> units, CommonValueExpression? returnExp = null)
         {
-            return new BodyExpression(variables, units, returnExp);//?? Empty
+            return new BodyExpression(variables, units, returnExp);
         }
         public static BodyExpression Block(CommonVariableExpression variable, IEnumerable<CommonExpression> units, CommonValueExpression? returnExp = null)
         {
